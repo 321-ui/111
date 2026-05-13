@@ -8,11 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-/**
- * @phpstan-use HasFactory<MasterClassFactory>
- */
 class MasterClass extends Model
 {
+    /** @use HasFactory<MasterClassFactory> */
     use HasFactory;
 
     protected $fillable = ['category_id', 'instructor_id', 'title', 'description', 'date', 'time', 'max_participants', 'price'];

@@ -143,7 +143,6 @@ class MasterClassController extends Controller
             ->where('instructor_id', $instructorId)
             ->pluck('time')
             ->map(function ($time) {
-                // Явная проверка типа, чтобы PHPStan не ругался на mixed -> string
                 if (! is_string($time)) {
                     return '';
                 }
