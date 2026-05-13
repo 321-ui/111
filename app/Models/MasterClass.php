@@ -4,40 +4,42 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class MasterClass extends Model
 {
-	use HasFactory;
+    use HasFactory;
 
-	protected $fillable = ['category_id', 'instructor_id', 'title', 'description', 'date', 'time', 'max_participants', 'price'];
+    protected $fillable = ['category_id', 'instructor_id', 'title', 'description', 'date', 'time', 'max_participants', 'price'];
 
-	protected $casts = [
-		'date' => 'date',
-		'price' => 'decimal:2',
-	];
+    protected $casts = [
+        'date' => 'date',
+        'price' => 'decimal:2',
+    ];
 
-	public function category(): \Illuminate\Database\Eloquent\Relations\BelongsTo
-	{
-		return $this->belongsTo(Category::class);
-	}
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
 
-	public function instructor(): \Illuminate\Database\Eloquent\Relations\BelongsTo
-	{
-		return $this->belongsTo(User::class, 'instructor_id');
-	}
+    public function instructor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'instructor_id');
+    }
 
-	public function registrations(): \Illuminate\Database\Eloquent\Relations\HasMany
-	{
-		return $this->hasMany(Registration::class);
-	}
+    public function registrations(): HasMany
+    {
+        return $this->hasMany(Registration::class);
+    }
 
-	public function getAvailableSlots(): int
-	{
-		return $this->max_participants - $this->registrations()->count();
-	}
+    public function getAvailableSlots(): int
+    {
+        return $this->max_participants - $this->registrations()->count();
+    }
 
-	public function isAvailable(): bool
-	{
-		return $this->getAvailableSlots() > 0;
-	}
+    public function isAvailable(): bool
+    {
+        return $this->getAvailableSlots() > 0;
+    }
 }

@@ -3,18 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-    public function showLoginForm(): \Illuminate\Contracts\View\View
+    public function showLoginForm(): View
     {
         return view('auth.login');
     }
 
-    public function login(Request $request): \Illuminate\Http\RedirectResponse
+    public function login(Request $request): RedirectResponse
     {
         /** @var array{email: string, password: string} $credentials */
         $credentials = $request->validate([
@@ -24,7 +26,7 @@ class AuthController extends Controller
 
         $user = User::where('email', $credentials['email'])->first();
 
-        if (!$user || !Hash::check($credentials['password'], $user->password)) {
+        if (! $user || ! Hash::check($credentials['password'], $user->password)) {
             return back()->withErrors(['email' => 'Неверный email или пароль']);
         }
 
@@ -41,12 +43,12 @@ class AuthController extends Controller
         return back()->withErrors(['email' => 'Неверный email или пароль']);
     }
 
-    public function showRegistrationForm(): \Illuminate\Contracts\View\View
+    public function showRegistrationForm(): View
     {
         return view('auth.register');
     }
 
-    public function register(Request $request): \Illuminate\Http\RedirectResponse
+    public function register(Request $request): RedirectResponse
     {
         /** @var array{full_name: string, email: string, password: string, phone: string} $validated */
         $validated = $request->validate([
@@ -65,7 +67,7 @@ class AuthController extends Controller
         return back()->with('success', 'Вы успешно зарегистрированы!');
     }
 
-    public function logout(Request $request): \Illuminate\Http\RedirectResponse
+    public function logout(Request $request): RedirectResponse
     {
         Auth::logout();
         $request->session()->invalidate();

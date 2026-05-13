@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\Registration;
 use App\Models\MasterClass;
+use App\Models\Registration;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -17,11 +17,11 @@ class RegistrationFactory extends Factory
      *
      * @return array<string, mixed>
      */
-	public function definition(): array
-	{
-		return [
-			'user_id' => User::factory(),
-			'master_class_id' => MasterClass::factory(),
-		];
-	}
+    public function definition(): array
+    {
+        return [
+            'user_id' => User::factory(),
+            'master_class_id' => MasterClass::factory(),
+        ];
+    }
 }

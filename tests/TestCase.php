@@ -7,12 +7,12 @@ use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
 {
-	use RefreshDatabase;
+    use RefreshDatabase;
 
-	protected function setUp(): void
-	{
-		parent::setUp();
+    protected function setUp(): void
+    {
+        parent::setUp();
 
-		$this->artisan('migrate', ['--seed' => true]);
-	}
+        $this->artisan('migrate', ['--seed' => true]);
+    }
 }

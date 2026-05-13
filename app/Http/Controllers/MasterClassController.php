@@ -4,141 +4,146 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\MasterClass;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class MasterClassController extends Controller
 {
-	public function cabinet(): \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
-	{
-		$instructor = Auth::user();
-		if (!$instructor->isInstructor()) {
-			return redirect()->route('home')->withErrors(['error' => 'Доступ только для ведущих']);
-		}
+    public function cabinet(): View|RedirectResponse
+    {
+        $instructor = Auth::user();
+        if (! $instructor->isInstructor()) {
+            return redirect()->route('home')->withErrors(['error' => 'Доступ только для ведущих']);
+        }
 
-		$masterClasses = $instructor->masterClasses()->with('category')->get();
-		return view('master-classes.cabinet', compact('masterClasses', 'instructor'));
-	}
+        $masterClasses = $instructor->masterClasses()->with('category')->get();
 
-	public function create(): \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
-	{
-		$instructor = Auth::user();
-		if (!$instructor->isInstructor()) {
-			return redirect()->route('home')->withErrors(['error' => 'Доступ только для ведущих']);
-		}
+        return view('master-classes.cabinet', compact('masterClasses', 'instructor'));
+    }
 
-		$categories = Category::all();
-		$timeSlots = ['09:00', '11:00', '13:00', '15:00'];
-		
-		return view('master-classes.create', compact('categories', 'timeSlots'));
-	}
+    public function create(): View|RedirectResponse
+    {
+        $instructor = Auth::user();
+        if (! $instructor->isInstructor()) {
+            return redirect()->route('home')->withErrors(['error' => 'Доступ только для ведущих']);
+        }
 
-	public function store(Request $request): \Illuminate\Http\RedirectResponse
-	{
-		$instructor = Auth::user();
-		if (!$instructor->isInstructor()) {
-			return redirect()->route('home')->withErrors(['error' => 'Доступ только для ведущих']);
-		}
+        $categories = Category::all();
+        $timeSlots = ['09:00', '11:00', '13:00', '15:00'];
 
-		$validated = $request->validate([
-			'category_id' => 'required|exists:categories,id',
-			'title' => 'required|string|max:255',
-			'description' => 'required|string',
-			'date' => 'required|date',
-			'time' => 'required|in:09:00,11:00,13:00,15:00',
-			'max_participants' => 'required|integer|min:1',
-			'price' => 'required|numeric|min:0',
-		]);
+        return view('master-classes.create', compact('categories', 'timeSlots'));
+    }
 
-		$validated['instructor_id'] = $instructor->id;
+    public function store(Request $request): RedirectResponse
+    {
+        $instructor = Auth::user();
+        if (! $instructor->isInstructor()) {
+            return redirect()->route('home')->withErrors(['error' => 'Доступ только для ведущих']);
+        }
 
-		try {
-			MasterClass::create($validated);
-			return redirect()->route('cabinet')->with('success', 'Мастер-класс успешно добавлен!');
-		} catch (\Exception $e) {
-			return back()->withErrors(['error' => 'Это время уже занято другим мастер-классом']);
-		}
-	}
+        $validated = $request->validate([
+            'category_id' => 'required|exists:categories,id',
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'date' => 'required|date',
+            'time' => 'required|in:09:00,11:00,13:00,15:00',
+            'max_participants' => 'required|integer|min:1',
+            'price' => 'required|numeric|min:0',
+        ]);
 
-	public function edit(int $id): \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
-	{
-		$instructor = Auth::user();
-		if (!$instructor->isInstructor()) {
-			return redirect()->route('home')->withErrors(['error' => 'Доступ только для ведущих']);
-		}
+        $validated['instructor_id'] = $instructor->id;
 
-		$masterClass = MasterClass::where('id', $id)
-			->where('instructor_id', $instructor->id)
-			->firstOrFail();
+        try {
+            MasterClass::create($validated);
 
-		return view('master-classes.edit', compact('masterClass'));
-	}
+            return redirect()->route('cabinet')->with('success', 'Мастер-класс успешно добавлен!');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Это время уже занято другим мастер-классом']);
+        }
+    }
 
-	public function update(Request $request, int $id): \Illuminate\Http\RedirectResponse
-	{
-		$instructor = Auth::user();
-		if (!$instructor->isInstructor()) {
-			return redirect()->route('home')->withErrors(['error' => 'Доступ только для ведущих']);
-		}
+    public function edit(int $id): View|RedirectResponse
+    {
+        $instructor = Auth::user();
+        if (! $instructor->isInstructor()) {
+            return redirect()->route('home')->withErrors(['error' => 'Доступ только для ведущих']);
+        }
 
-		$masterClass = MasterClass::where('id', $id)
-			->where('instructor_id', $instructor->id)
-			->firstOrFail();
+        $masterClass = MasterClass::where('id', $id)
+            ->where('instructor_id', $instructor->id)
+            ->firstOrFail();
 
-		$validated = $request->validate([
-			'description' => 'required|string',
-			'price' => 'required|numeric|min:0',
-		]);
+        return view('master-classes.edit', compact('masterClass'));
+    }
 
-		$masterClass->update($validated);
+    public function update(Request $request, int $id): RedirectResponse
+    {
+        $instructor = Auth::user();
+        if (! $instructor->isInstructor()) {
+            return redirect()->route('home')->withErrors(['error' => 'Доступ только для ведущих']);
+        }
 
-		return redirect()->route('cabinet')->with('success', 'Мастер-класс успешно обновлен!');
-	}
+        $masterClass = MasterClass::where('id', $id)
+            ->where('instructor_id', $instructor->id)
+            ->firstOrFail();
 
-	public function show(int $id): \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
-	{
-		$instructor = Auth::user();
-		if (!$instructor->isInstructor()) {
-			return redirect()->route('home')->withErrors(['error' => 'Доступ только для ведущих']);
-		}
+        $validated = $request->validate([
+            'description' => 'required|string',
+            'price' => 'required|numeric|min:0',
+        ]);
 
-		$masterClass = MasterClass::where('id', $id)
-			->where('instructor_id', $instructor->id)
-			->with(['category', 'registrations.user'])
-			->firstOrFail();
+        $masterClass->update($validated);
 
-		return view('master-classes.show', compact('masterClass'));
-	}
+        return redirect()->route('cabinet')->with('success', 'Мастер-класс успешно обновлен!');
+    }
 
-	public function destroy(int $id): \Illuminate\Http\RedirectResponse
-	{
-		$instructor = Auth::user();
-		if (!$instructor->isInstructor()) {
-			return redirect()->route('home')->withErrors(['error' => 'Доступ только для ведущих']);
-		}
+    public function show(int $id): View|RedirectResponse
+    {
+        $instructor = Auth::user();
+        if (! $instructor->isInstructor()) {
+            return redirect()->route('home')->withErrors(['error' => 'Доступ только для ведущих']);
+        }
 
-		$masterClass = MasterClass::where('id', $id)
-			->where('instructor_id', $instructor->id)
-			->firstOrFail();
+        $masterClass = MasterClass::where('id', $id)
+            ->where('instructor_id', $instructor->id)
+            ->with(['category', 'registrations.user'])
+            ->firstOrFail();
 
-		$masterClass->delete();
+        return view('master-classes.show', compact('masterClass'));
+    }
 
-		return redirect()->route('cabinet')->with('success', 'Мастер-класс успешно удален!');
-	}
+    public function destroy(int $id): RedirectResponse
+    {
+        $instructor = Auth::user();
+        if (! $instructor->isInstructor()) {
+            return redirect()->route('home')->withErrors(['error' => 'Доступ только для ведущих']);
+        }
 
-	public function getBusySlots(Request $request): \Illuminate\Http\JsonResponse
-	{
-		$date = $request->query('date');
-		$instructorId = $request->query('instructor_id');
+        $masterClass = MasterClass::where('id', $id)
+            ->where('instructor_id', $instructor->id)
+            ->firstOrFail();
 
-		$busySlots = MasterClass::where('date', $date)
-			->where('instructor_id', $instructorId)
-			->pluck('time')
-			->map(function ($time) {
-				return substr($time, 0, 5);
-			})
-			->toArray();
+        $masterClass->delete();
 
-		return response()->json($busySlots);
-	}
+        return redirect()->route('cabinet')->with('success', 'Мастер-класс успешно удален!');
+    }
+
+    public function getBusySlots(Request $request): JsonResponse
+    {
+        $date = $request->query('date');
+        $instructorId = $request->query('instructor_id');
+
+        $busySlots = MasterClass::where('date', $date)
+            ->where('instructor_id', $instructorId)
+            ->pluck('time')
+            ->map(function ($time) {
+                return substr($time, 0, 5);
+            })
+            ->toArray();
+
+        return response()->json($busySlots);
+    }
 }
