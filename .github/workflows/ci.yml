@@ -1,0 +1,119 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ master, main, development, dev, develop, uat, qa ]
+  pull_request:
+    branches: [ master, main, development, dev, develop, uat, qa ]
+
+jobs:
+  tests:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, xml, ctype, iconv, sqlite3
+          coverage: xdebug
+
+      - name: Install Dependencies
+        run: composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+
+      - name: Copy .env.ci
+        run: cp .env.ci .env
+
+      - name: Generate Key
+        run: php artisan key:generate
+
+      - name: Run Tests
+        run: php artisan test --coverage-clover coverage.xml
+
+      - name: Check Coverage
+        run: php coverage-checker.php coverage.xml 50
+
+  static-analysis:
+    name: Static Analysis
+    runs-on: ubuntu-latest
+    needs: tests
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+
+      - name: Install Dependencies
+        run: composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+
+      - name: Run PHPStan
+        run: ./vendor/bin/phpstan analyze --no-progress
+
+  linting:
+    name: Linting
+    runs-on: ubuntu-latest
+    needs: tests
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+
+      - name: Install Dependencies
+        run: composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+
+      - name: Run Pint (Test Mode)
+        if: contains(fromJSON('["master", "main", "development", "dev", "develop", "uat", "qa"]'), github.ref_name)
+        run: ./vendor/bin/pint --test
+
+      - name: Run Pint (Fix Mode)
+        if: "!contains(fromJSON('["master", "main", "development", "dev", "develop", "uat", "qa"]'), github.ref_name)"
+        run: ./vendor/bin/pint
+
+      - name: Commit changes
+        if: "!contains(fromJSON('["master", "main", "development", "dev", "develop", "uat", "qa"]'), github.ref_name)"
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: format code with Laravel Pint"
+
+  deploy-simulation:
+    name: Deploy Simulation
+    runs-on: ubuntu-latest
+    needs: [static-analysis, linting]
+    if: contains(fromJSON('["master", "main", "development", "dev", "develop", "uat", "qa"]'), github.ref_name) && github.event_name == 'push'
+    environment:
+      name: ${{ (github.ref_name == 'master' || github.ref_name == 'main') && 'production' || (github.ref_name == 'uat' || github.ref_name == 'qa') && 'uat' || 'development' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Simulation
+        run: |
+          if [[ "${{ github.ref_name }}" =~ ^(master|main)$ ]]; then
+            ENV="prod"
+          elif [[ "${{ github.ref_name }}" =~ ^(uat|qa)$ ]]; then
+            ENV="uat"
+          else
+            ENV="dev"
+          fi
+          cp .env.$ENV .env
+          echo "Deploying to $ENV with .env.$ENV"
+
+  notification:
+    name: Notify Maintainers
+    runs-on: ubuntu-latest
+    needs: [deploy-simulation]
+    if: always()
+    steps:
+      - name: Send result
+        run: |
+          RESULT="${{ needs.deploy-simulation.result }}"
+          if [ "$RESULT" == "success" ]; then
+            echo "Pipeline succeeded! Notifying maintainers..."
+          else
+            echo "Pipeline failed! Notifying maintainers..."
+          fi

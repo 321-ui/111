@@ -1,0 +1,40 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class MasterClass extends Model
+{
+	protected $fillable = ['category_id', 'instructor_id', 'title', 'description', 'date', 'time', 'max_participants', 'price'];
+
+	protected $casts = [
+		'date' => 'date',
+		'price' => 'decimal:2',
+	];
+
+	public function category(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+	{
+		return $this->belongsTo(Category::class);
+	}
+
+	public function instructor(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+	{
+		return $this->belongsTo(User::class, 'instructor_id');
+	}
+
+	public function registrations(): \Illuminate\Database\Eloquent\Relations\HasMany
+	{
+		return $this->hasMany(Registration::class);
+	}
+
+	public function getAvailableSlots(): int
+	{
+		return $this->max_participants - $this->registrations()->count();
+	}
+
+	public function isAvailable(): bool
+	{
+		return $this->getAvailableSlots() > 0;
+	}
+}
