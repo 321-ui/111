@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use Database\Factories\MasterClassFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @phpstan-use HasFactory<MasterClassFactory>
+ */
 class MasterClass extends Model
 {
     use HasFactory;
@@ -18,16 +22,19 @@ class MasterClass extends Model
         'price' => 'decimal:2',
     ];
 
+    /** @return BelongsTo<Category, self> */
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
     }
 
+    /** @return BelongsTo<User, self> */
     public function instructor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'instructor_id');
     }
 
+    /** @return HasMany<Registration, self> */
     public function registrations(): HasMany
     {
         return $this->hasMany(Registration::class);

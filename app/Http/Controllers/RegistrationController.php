@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\MasterClass;
 use App\Models\Registration;
+use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,7 +16,12 @@ class RegistrationController extends Controller
     public function confirm(int $id): View|RedirectResponse
     {
         $masterClass = MasterClass::with(['category', 'instructor'])->withCount('registrations')->findOrFail($id);
+        /** @var User|null $user */
         $user = Auth::user();
+
+        if (! $user instanceof User) {
+            return redirect()->route('login')->withErrors(['error' => 'Необходимо авторизоваться']);
+        }
 
         if ($masterClass->registrations_count >= $masterClass->max_participants) {
             return redirect()->route('categories.show', $masterClass->category_id)
@@ -37,7 +43,12 @@ class RegistrationController extends Controller
     public function store(Request $request, int $id): RedirectResponse
     {
         $masterClass = MasterClass::findOrFail($id);
+        /** @var User|null $user */
         $user = Auth::user();
+
+        if (! $user instanceof User) {
+            return redirect()->route('login')->withErrors(['error' => 'Необходимо авторизоваться']);
+        }
 
         $existingRegistration = Registration::where('user_id', $user->id)
             ->where('master_class_id', $id)
@@ -78,7 +89,13 @@ class RegistrationController extends Controller
 
     public function myRegistrations(): View
     {
+        /** @var User|null $user */
         $user = Auth::user();
+
+        if (! $user instanceof User) {
+            abort(403, 'Необходимо авторизоваться');
+        }
+
         $registrations = $user->registrations()->with('masterClass.category', 'masterClass.instructor')->get();
 
         return view('registrations.my', compact('registrations'));
