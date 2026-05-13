@@ -73,11 +73,11 @@ jobs:
         run: ./vendor/bin/pint --test
 
       - name: Run Pint (Fix Mode)
-        if: "!contains(fromJSON('["master", "main", "development", "dev", "develop", "uat", "qa"]'), github.ref_name)"
+        if: "!contains(fromJSON('[\"master\", \"main\", \"development\", \"dev\", \"develop\", \"uat\", \"qa\"]'), github.ref_name)"
         run: ./vendor/bin/pint
 
       - name: Commit changes
-        if: "!contains(fromJSON('["master", "main", "development", "dev", "develop", "uat", "qa"]'), github.ref_name)"
+        if: "!contains(fromJSON('[\"master\", \"main\", \"development\", \"dev\", \"develop\", \"uat\", \"qa\"]'), github.ref_name)"
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore: format code with Laravel Pint"
