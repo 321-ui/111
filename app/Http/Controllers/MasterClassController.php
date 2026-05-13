@@ -5,30 +5,26 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\MasterClass;
 use App\Models\User;
-use Illuminate\Contracts\View\View;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class MasterClassController extends Controller
 {
-    public function cabinet(): View|RedirectResponse
+    public function cabinet(): \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
     {
         $instructor = Auth::user();
-        if (! $instructor instanceof User || ! $instructor->isInstructor()) {
+        if (!$instructor instanceof User || !$instructor->isInstructor()) {
             return redirect()->route('home')->withErrors(['error' => 'Доступ только для ведущих']);
         }
 
         $masterClasses = $instructor->masterClasses()->with('category')->get();
-
         return view('master-classes.cabinet', compact('masterClasses', 'instructor'));
     }
 
-    public function create(): View|RedirectResponse
+    public function create(): \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
     {
         $instructor = Auth::user();
-        if (! $instructor instanceof User || ! $instructor->isInstructor()) {
+        if (!$instructor instanceof User || !$instructor->isInstructor()) {
             return redirect()->route('home')->withErrors(['error' => 'Доступ только для ведущих']);
         }
 
@@ -38,10 +34,10 @@ class MasterClassController extends Controller
         return view('master-classes.create', compact('categories', 'timeSlots'));
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
         $instructor = Auth::user();
-        if (! $instructor instanceof User || ! $instructor->isInstructor()) {
+        if (!$instructor instanceof User || !$instructor->isInstructor()) {
             return redirect()->route('home')->withErrors(['error' => 'Доступ только для ведущих']);
         }
 
@@ -60,17 +56,16 @@ class MasterClassController extends Controller
 
         try {
             MasterClass::create($validated);
-
             return redirect()->route('cabinet')->with('success', 'Мастер-класс успешно добавлен!');
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Это время уже занято другим мастер-классом']);
         }
     }
 
-    public function edit(int $id): View|RedirectResponse
+    public function edit(int $id): \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
     {
         $instructor = Auth::user();
-        if (! $instructor instanceof User || ! $instructor->isInstructor()) {
+        if (!$instructor instanceof User || !$instructor->isInstructor()) {
             return redirect()->route('home')->withErrors(['error' => 'Доступ только для ведущих']);
         }
 
@@ -81,10 +76,10 @@ class MasterClassController extends Controller
         return view('master-classes.edit', compact('masterClass'));
     }
 
-    public function update(Request $request, int $id): RedirectResponse
+    public function update(Request $request, int $id): \Illuminate\Http\RedirectResponse
     {
         $instructor = Auth::user();
-        if (! $instructor instanceof User || ! $instructor->isInstructor()) {
+        if (!$instructor instanceof User || !$instructor->isInstructor()) {
             return redirect()->route('home')->withErrors(['error' => 'Доступ только для ведущих']);
         }
 
@@ -103,10 +98,10 @@ class MasterClassController extends Controller
         return redirect()->route('cabinet')->with('success', 'Мастер-класс успешно обновлен!');
     }
 
-    public function show(int $id): View|RedirectResponse
+    public function show(int $id): \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
     {
         $instructor = Auth::user();
-        if (! $instructor instanceof User || ! $instructor->isInstructor()) {
+        if (!$instructor instanceof User || !$instructor->isInstructor()) {
             return redirect()->route('home')->withErrors(['error' => 'Доступ только для ведущих']);
         }
 
@@ -118,10 +113,10 @@ class MasterClassController extends Controller
         return view('master-classes.show', compact('masterClass'));
     }
 
-    public function destroy(int $id): RedirectResponse
+    public function destroy(int $id): \Illuminate\Http\RedirectResponse
     {
         $instructor = Auth::user();
-        if (! $instructor instanceof User || ! $instructor->isInstructor()) {
+        if (!$instructor instanceof User || !$instructor->isInstructor()) {
             return redirect()->route('home')->withErrors(['error' => 'Доступ только для ведущих']);
         }
 
@@ -134,7 +129,7 @@ class MasterClassController extends Controller
         return redirect()->route('cabinet')->with('success', 'Мастер-класс успешно удален!');
     }
 
-    public function getBusySlots(Request $request): JsonResponse
+    public function getBusySlots(Request $request): \Illuminate\Http\JsonResponse
     {
         $date = $request->query('date');
         $instructorId = $request->query('instructor_id');
@@ -143,8 +138,14 @@ class MasterClassController extends Controller
             ->where('instructor_id', $instructorId)
             ->pluck('time')
             ->map(function ($time) {
-                return substr((string) $time, 0, 5);
+                // Явная проверка типа, чтобы PHPStan не ругался на mixed -> string
+                if (!is_string($time)) {
+                    return '';
+                }
+                return substr($time, 0, 5);
             })
+            ->filter()
+            ->values()
             ->toArray();
 
         return response()->json($busySlots);
