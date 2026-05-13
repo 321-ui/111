@@ -1,8 +1,6 @@
 {
     "preset": "laravel",
     "rules": {
-        "indentation": {
-            "type": "tab"
-        }
+        "indentation_type": true
     }
 }
