@@ -185,12 +185,12 @@ class MasterClassTest extends TestCase
 			'time' => '09:00',
 		]);
 
-		$response = $this->getJson('/api/busy-slots', [
+		$response = $this->getJson('/api/busy-slots?' . http_build_query([
 			'date' => '2026-06-15',
 			'instructor_id' => $this->instructor->id,
-		]);
+		]));
 
 		$response->assertStatus(200);
-		$response->assertJsonContains('09:00');
+		$response->assertSee('09:00');
 	}
 }

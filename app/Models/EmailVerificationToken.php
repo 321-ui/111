@@ -12,7 +12,7 @@ class EmailVerificationToken extends Model
 		'expires_at' => 'datetime',
 	];
 
-	public function user()
+	public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
 	{
 		return $this->belongsTo(User::class);
 	}

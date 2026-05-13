@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class MasterClass extends Model
 {
+	use HasFactory;
+
 	protected $fillable = ['category_id', 'instructor_id', 'title', 'description', 'date', 'time', 'max_participants', 'price'];
 
 	protected $casts = [
