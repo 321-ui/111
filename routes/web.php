@@ -31,4 +31,4 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/my-registrations', [RegistrationController::class, 'myRegistrations'])->name('registrations.my');
 });
 
-Route::get('/api/busy-slots', [MasterClassController::class, 'getBusySlots']);
+   Route::get('/api/busy-slots', [MasterClassController::class, 'getBusySlots']);
