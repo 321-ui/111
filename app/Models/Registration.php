@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use Database\Factories\RegistrationFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * @phpstan-use HasFactory<\Database\Factories\RegistrationFactory>
+ * @phpstan-use HasFactory<RegistrationFactory>
  */
 class Registration extends Model
 {
@@ -15,13 +16,13 @@ class Registration extends Model
 
     protected $fillable = ['user_id', 'master_class_id'];
 
-    /** @return BelongsTo<User, Registration> */
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    /** @return BelongsTo<MasterClass, Registration> */
+    /** @return BelongsTo<MasterClass, $this> */
     public function masterClass(): BelongsTo
     {
         return $this->belongsTo(MasterClass::class);
